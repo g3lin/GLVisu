@@ -1,0 +1,1 @@
+void construct_points(float pasEchantillonage);
