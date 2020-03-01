@@ -117,9 +117,10 @@ int main()
     float vertices[3*ListePoints.size()] ;
 
     for(int i = 0; i<ListePoints.size(); ++i) {
-        vertices[3*i] = ListePoints[i].x;
-        vertices[3*i+1] = ListePoints[i].y;
+        vertices[3*i] = ListePoints[i].x / UPPER_BOUND;
+        vertices[3*i+1] = ListePoints[i].y / UPPER_BOUND;
         vertices[3*i+2] = 0.0f;
+        std::cout << "x: " << vertices[3*i] << " y: " << vertices[3*i+1] << std::endl;
         
     }
 
