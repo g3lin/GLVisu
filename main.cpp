@@ -1,10 +1,12 @@
-
-
-#include "glad.h"
+#include "glad.h" // A modifier en fonction de votre cas - normalement pour le reste rien ne change
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+float getFunction(float x, float y);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 int processInput(GLFWwindow* window);
 
@@ -144,5 +146,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+}
+
+float getFunction(float x, float y) {
+    // Fonction a echantillonner
+    return 2 * exp(-(pow(x, 2) + pow(y, 2))) + exp(-(pow(x - 3, 2) + pow(y - 3, 2)));
 }
 
