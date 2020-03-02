@@ -32,7 +32,7 @@ const char* vertexShaderSource = "#version 330 core\n"
 "uniform float scale_x;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4((aPos.x + 0.0f) / 5.5, aPos.y, aPos.z, 1.0);\n"
+"   gl_Position = vec4((aPos.x + 0.0f) / 5,(aPos.y + 0.0f) / 5, aPos.z, 1.0);\n"
 "}\0"; 
 
 const char* fragmentShaderSource = "#version 330 core\n"
@@ -108,8 +108,8 @@ int main()
 
     for (int x = 0; x < grid_x ; x += 1) {
         for (int y = 0; y < grid_y; y += 1) {
-            float x_data = (x - 50.0) / 50.0;
-            float y_data = (y - 50.0) / 50.0;
+            float x_data = (x - 50.0) / 10.0;
+            float y_data = (y - 50.0) / 10.0;
             float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
 
             data[x][y].x = x_data;
