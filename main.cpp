@@ -17,8 +17,7 @@ const unsigned int SCR_HEIGHT = 600;
 GLint uniform_offset_x;
 GLint uniform_scale_x;
 
-float offset_x = 0.0;
-float scale_x = 1.0;
+const float scale_x = 5.;
 
 bool add_is_press = false;
 bool subtract_is_press = false;
@@ -34,23 +33,26 @@ unsigned int VBO,VBO_colors, VAO;
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
+
 "uniform float offset_x;\n"
 "uniform float scale_x;\n"
 "out vec3 color;\n"
+
 "void main()\n"
 "{\n"
-"   gl_Position = vec4((aPos.x + 0.0f) / 5,(aPos.y + 0.0f) / 5, aPos.z, 1.0);\n"
+"   gl_Position = vec4((aPos.x + 0.0f) / scale_x, (aPos.y + 0.0f) / scale_x, aPos.z, 1.0);\n"
 "   color = aColor;\n"
-//"   gl_FrontColor = vec4((fragmentColor.r+ 0.0f),(fragmentColor.g+ 0.0f),(fragmentColor.b+ 0.0f),1.0);\n"
-"}\0"; 
+
+"}\0";
 
 const char* fragmentShaderSource = "#version 330 core\n"
 "in vec3 color;\n"
 "out vec4 FragColor;\n"
+
 "void main()\n"
 "{\n"
 "   FragColor = vec4((color.r+ 0.0f),(color.g+ 0.0f),(color.b+ 0.0f),1.0);\n"
-//"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+
 "}\n\0";
 
 int main()
@@ -104,6 +106,10 @@ int main()
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    int id_scale_x = glGetUniformLocation(shaderProgram, "scale_x");
+    glUseProgram(shaderProgram);
+    glUniform1f(id_scale_x, scale_x);
 
     // Nombre d'echantillons
     int sample = 100;
@@ -217,22 +223,18 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-Data_color rainbowColorMap(float f){
-    float f_orig =f;
-    const  float dx = 0.8;
+Data_color rainbowColorMap(float f){ 
+    const  float dx = 0.8f;
     f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
-    int g=(6-2*dx)*f+dx;//scale f to[dx,6−dx]
-    int R=max(0.0,(3-fabs(g-4)-fabs(g-5))/2);
+    float g=(6-2*dx)*f+dx;//scale f to[dx,6−dx]
+    float R=max(0.0f,(3-fabs(g-4)-fabs(g-5))/2);
     //int R = f/255.0;
-    int G=max(0.0,(4-std::fabs(g-2)-std::fabs(g-4))/2);
-    int B=max(0.0,(3-std::fabs(g-1)-std::fabs(g-2))/2);
+    float G=max(0.0f,(4-std::fabs(g-2)-std::fabs(g-4))/2);
+    float B=max(0.0f,(3-std::fabs(g-1)-std::fabs(g-2))/2);
     Data_color color;
     color.r = R;
-    color.r = 255.0; // pour des tests à enlever
     color.g = G;
     color.b = B;
-    //if(f_orig>0.01)
-    //std::cout << f_orig << " => " << color.r << " "<< color.g << " "<< color.b << std::endl;
     return color;
 }
 
@@ -248,13 +250,10 @@ void setNewDatas(int sample) {
 
     for (int x = 0; x < sample ; x += 1) {
         for (int y = 0; y < sample; y += 1) {
-            //float x_data = (x - 50.) / 10.;
-            //float y_data = (y - 50.) / 10.;
             float x_data = (x - 0.5 * (float)sample) / (0.1 * (float)sample);
             float y_data = (y - 0.5 * (float)sample) / (0.1 * (float)sample);
             float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
-            //float z_data_bis = 2 * exp(-(x_data_bis * x_data_bis + y_data_bis * y_data_bis) + exp(-((x_data_bis - 3) * (x_data_bis - 3) + (y_data_bis - 3) * (y_data_bis - 3))));
-            //z_data  =function_calc(x,y);
+
             Data_color color_x_y = rainbowColorMap(z_data);
 
             //std::cout << "x_data : " << z_data << " | x_data_bis : " << z_data_bis << std::endl;
@@ -267,40 +266,26 @@ void setNewDatas(int sample) {
         }
     }
 
-
-
-    GLint attribute_coord2d, attribute_v_color;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    glGenBuffers(1, &VBO_colors);
+
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
-    
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-    //On fait la meme pour les couleurs
-    glGenBuffers(1, &VBO_colors);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
-    
-    //int nbPoints = sizeof(data)/sizeof(GLfloat);
-    int nbPoints = sample * sample;
-    cout << nbPoints <<endl;
-    
-    //glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized     
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(0, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+   
     glEnableVertexAttribArray(0);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
-    glVertexAttribPointer(1, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)(sizeof(data)));
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(1);  
+
+    glBindVertexArray(0);
 
 }
  
