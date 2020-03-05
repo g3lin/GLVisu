@@ -118,11 +118,33 @@ Data_color grayscaleColorMap(float f){
     return color;
 }
 
+Data_color heatColorMap(float f){
+    const float mid =0.3f;
+    f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
+    float R, G, B;
+    if (f <= mid){
+        R = f*255/mid;
+        G = 0.0f;
+        B = 0.0f;
+    }
+    
+    else {
+        R = 255.0f;
+        G = (f-mid)*255/(1-mid);
+        B = 0.0f;
+
+    }
+    
+
+    Data_color color;
+    color.r = R;
+    color.g = G;
+    color.b = B;
+    return color;
+}
+
 
 Data_color divergingColorMap(float f){
-
-   
-    
     const  float dx = 0.8f;
     const float mid = 0.5f;
     f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
@@ -165,7 +187,7 @@ Data_color getColorMap(float f){
     if(currentColor == 2)
         return rainbowColorMap(f);
     if(currentColor == 3)
-        return rainbowColorMap(f);
+        return heatColorMap(f);
     if(currentColor == 4)
         return divergingColorMap(f);
 }
@@ -183,7 +205,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TP2 IMN430 USherbrooke", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
