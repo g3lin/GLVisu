@@ -3,10 +3,11 @@
 #include <iostream>
 using namespace std;
 
+void lesVraisTests(int sample);
 
 float i;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+int processInput(GLFWwindow* window);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -19,13 +20,15 @@ GLint uniform_scale_x;
 float offset_x = 0.0;
 float scale_x = 1.0;
 
+bool add_is_press = false;
+bool subtract_is_press = false;
+
 typedef struct
 {
     GLfloat x, y, z;
 } Data;
 
-
-
+unsigned int VBO,VBO_colors, VAO;
 
 
 const char* vertexShaderSource = "#version 330 core\n"
@@ -107,35 +110,8 @@ int main()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-   
-    const int grid_x = 100;
-    const int grid_y = 100;
-    const int num_points = grid_x * grid_y;
-
-    Data data[grid_x][grid_y];
-    Data_color data_color[grid_x][grid_y];
-
-
-
-    for (int x = 0; x < grid_x ; x += 1) {
-        for (int y = 0; y < grid_y; y += 1) {
-            float x_data = (x - 50.0) / 10.0;
-            float y_data = (y - 50.0) / 10.0;
-            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
-            //z_data  =function_calc(x,y);
-            Data_color color_x_y = rainbowColorMap(z_data);
-
-
-            data[x][y].x = x_data;
-            data[x][y].y = y_data;
-            data[x][y].z = 0.0f;
-
-            data_color[x][y] = color_x_y;  
-
-        }
-    }
  
-
+    /**
     unsigned int VBO,VBO_colors, VAO;
     GLint attribute_coord2d, attribute_v_color;
     glGenVertexArrays(1, &VAO);
@@ -175,17 +151,32 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
     glVertexAttribPointer(1, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)(sizeof(data)));
     glEnableVertexAttribArray(1);
+    */
+    // Nombre d'echantillons
+    int sample = 100;
 
-
-
+    // Ajuster le nombre d'echantillons
+    int input_ch;
+    int step_sample = 10;
 
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        // input
-        // -----
-        processInput(window);
+        // Input
+        input_ch = processInput(window);
+
+        if (input_ch == 1) {
+            sample += step_sample;
+        }
+        if (input_ch == 2) {
+            sample -= step_sample;
+        }
+
+        std::cout << "Nombre d'echantillons : " << sample << std::endl;
+
+        // Actualiser les donnees
+        lesVraisTests(sample);
 
         // render
         // ------
@@ -222,11 +213,46 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+int processInput(GLFWwindow* window) { 
+    
+    // Fermer la fenetre
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+       
+        return -1;
+    }
 
+    // 'Debloquer' les touches '+' et '-'
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE && add_is_press) {
+        std::cout << "Ca release add" << std::endl;
+        add_is_press = false;
+
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_RELEASE && subtract_is_press) {
+        std::cout << "Ca release subtract" << std::endl;
+        subtract_is_press = false;
+
+    }
+
+    // 'Bloquer' les touches '+' et '-' & Envoie du signal
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS && !add_is_press) {
+        // Cas du '+'
+        std::cout << "C'est plus" << std::endl;
+        add_is_press = true;
+
+        return 1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS && !subtract_is_press) {
+        // Cas du '-'
+        std::cout << "C'est moins" << std::endl;
+        subtract_is_press = true;
+
+        return 2;
+    }
+
+    return 0;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -252,8 +278,8 @@ Data_color rainbowColorMap(float f){
     color.r = 255.0; // pour des tests à enlever
     color.g = G;
     color.b = B;
-    if(f_orig>0.01)
-    std::cout << f_orig << " => " << color.r << " "<< color.g << " "<< color.b << std::endl;
+    //if(f_orig>0.01)
+    //std::cout << f_orig << " => " << color.r << " "<< color.g << " "<< color.b << std::endl;
     return color;
 }
 
@@ -261,5 +287,67 @@ float function_calc(float x, float y){
     return 2* exp(-(pow(x,2)+pow(y,2)))+ exp(-(pow(x-3,2)+pow(y-3,2)));
 }
 
+void lesVraisTests(int sample) {
 
+    int num_points = sample * sample;
+    Data data[sample][sample];
+    Data_color data_color[sample][sample];
+
+    for (int x = 0; x < sample ; x += 1) {
+        for (int y = 0; y < sample; y += 1) {
+            //float x_data = (x - 50.) / 10.;
+            //float y_data = (y - 50.) / 10.;
+            float x_data = (x - 0.5 * (float)sample) / (0.1 * (float)sample);
+            float y_data = (y - 0.5 * (float)sample) / (0.1 * (float)sample);
+            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
+            //float z_data_bis = 2 * exp(-(x_data_bis * x_data_bis + y_data_bis * y_data_bis) + exp(-((x_data_bis - 3) * (x_data_bis - 3) + (y_data_bis - 3) * (y_data_bis - 3))));
+            //z_data  =function_calc(x,y);
+            Data_color color_x_y = rainbowColorMap(z_data);
+
+            //std::cout << "x_data : " << z_data << " | x_data_bis : " << z_data_bis << std::endl;
+            data[x][y].x = x_data;
+            data[x][y].y = y_data;
+            data[x][y].z = 0.0f;
+
+            data_color[x][y] = color_x_y;  
+
+        }
+    }
+
+
+
+    GLint attribute_coord2d, attribute_v_color;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+    //On fait la meme pour les couleurs
+    glGenBuffers(1, &VBO_colors);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
+    
+    //int nbPoints = sizeof(data)/sizeof(GLfloat);
+    int nbPoints = sample * sample;
+    cout << nbPoints <<endl;
+    
+    //glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized     
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    glVertexAttribPointer(1, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)(sizeof(data)));
+    glEnableVertexAttribArray(1);
+
+}
  
