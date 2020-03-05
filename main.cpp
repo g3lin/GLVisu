@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-void lesVraisTests(int sample);
+void setNewDatas(int sample);
 
 float i;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -91,12 +91,10 @@ int main()
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-
     // fragment shader
     int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
-
 
     // link shaders
     int shaderProgram = glCreateProgram();
@@ -104,54 +102,9 @@ int main()
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
- 
-    /**
-    unsigned int VBO,VBO_colors, VAO;
-    GLint attribute_coord2d, attribute_v_color;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
-    
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    //glBindVertexArray(0);
-
-
-
-        
-    //On fait la meme pour les couleurs
-    glGenBuffers(1, &VBO_colors);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
-    
-    int nbPoints = sizeof(data)/sizeof(GLfloat);
-    cout << nbPoints <<endl;
-    
-    //glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized     
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(0, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
-    glVertexAttribPointer(1, nbPoints, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)(sizeof(data)));
-    glEnableVertexAttribArray(1);
-    */
     // Nombre d'echantillons
     int sample = 100;
 
@@ -176,7 +129,7 @@ int main()
         std::cout << "Nombre d'echantillons : " << sample << std::endl;
 
         // Actualiser les donnees
-        lesVraisTests(sample);
+        setNewDatas(sample);
 
         // render
         // ------
@@ -287,7 +240,7 @@ float function_calc(float x, float y){
     return 2* exp(-(pow(x,2)+pow(y,2)))+ exp(-(pow(x-3,2)+pow(y-3,2)));
 }
 
-void lesVraisTests(int sample) {
+void setNewDatas(int sample) {
 
     int num_points = sample * sample;
     Data data[sample][sample];
