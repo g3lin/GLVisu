@@ -122,7 +122,7 @@ int main()
             float x_data = (x - 50.0) / 10.0;
             float y_data = (y - 50.0) / 10.0;
             float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
-            z_data  =function_calc(x,y);
+            //z_data  =function_calc(x,y);
             Data_color color_x_y = rainbowColorMap(z_data);
 
 
@@ -154,7 +154,7 @@ int main()
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
+    //glBindVertexArray(0);
 
 
 
@@ -166,6 +166,14 @@ int main()
     
 
     
+    //glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized     
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 10000, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    glVertexAttribPointer(1, 10000, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)(sizeof(data)));
+    glEnableVertexAttribArray(1);
 
 
 
@@ -186,19 +194,10 @@ int main()
 
         // draw our first triangle
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-
-
-
-        
+        glBindVertexArray(VAO);
         glDrawArrays(GL_POINTS, 0, 1000000);
-        // glBindVertexArray(0); // no need to unbind it every time 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -249,9 +248,10 @@ Data_color rainbowColorMap(float f){
     int B=max(0.0,(3-std::fabs(g-1)-std::fabs(g-2))/2);
     Data_color color;
     color.r = R;
+    color.r = 255.0; // pour des tests à enlever
     color.g = G;
     color.b = B;
-    if(f_orig!=0)
+    if(f_orig>0.01)
     std::cout << f_orig << " => " << color.r << " "<< color.g << " "<< color.b << std::endl;
     return color;
 }
