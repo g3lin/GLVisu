@@ -36,6 +36,8 @@ float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 float fov = 45.0f;
 
+int currentColor = 4;
+
 
 typedef struct
 {
@@ -117,6 +119,58 @@ Data_color grayscaleColorMap(float f){
 }
 
 
+Data_color divergingColorMap(float f){
+
+   
+    
+    const  float dx = 0.8f;
+    const float mid = 0.5f;
+    f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
+    float R, G, B;
+    if (f <= 0.25f){
+        R = 0.0f;
+        G = f*255/0.25f;
+        B = 255.0f;
+    }
+    else if (f <= mid){
+        R = (f-0.25f)*255/0.25f;
+        G = 255.0f;
+        B = 255.0f;
+    }
+    else if (f <= 0.75f){
+        R = 255.0f;
+        G = 255.0f;
+        B = 255-((f-0.5f)*255/0.25f);
+
+    }
+    else {
+        R= 255.0f;
+        G = 255-((f-0.5f)*255/0.25f);
+        B = 0.0f;
+    }
+
+    Data_color color;
+    color.r = R;
+    color.g = G;
+    color.b = B;
+    return color;
+}
+
+
+Data_color getColorMap(float f){
+    if(currentColor == 0)
+        return rainbowColorMap(f);
+    if(currentColor == 1)
+        return grayscaleColorMap(f);
+    if(currentColor == 2)
+        return rainbowColorMap(f);
+    if(currentColor == 3)
+        return rainbowColorMap(f);
+    if(currentColor == 4)
+        return divergingColorMap(f);
+}
+
+
 int main()
 {
     // glfw: initialize and configure
@@ -194,7 +248,7 @@ int main()
             float x_data = (x - 100.0) / 5.0;
             float y_data = (y - 100.0) / 5.0;
             float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
-            Data_color color_x_y = grayscaleColorMap(z_data);
+            Data_color color_x_y = getColorMap(z_data);
             data[x][y].x = x_data;
             data[x][y].y = y_data;
             data[x][y].z = z_data;
@@ -315,7 +369,8 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+        currentColor = (currentColor+1)%5;
     float cameraSpeed = 2.5 * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront; 
