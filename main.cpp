@@ -269,7 +269,7 @@ int main()
         for (int y = 0; y < grid_y; y += 1) {
             float x_data = (x - 100.0) / 5.0;
             float y_data = (y - 100.0) / 5.0;
-            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
+            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data)) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3)));
             Data_color color_x_y = getColorMap(z_data);
             data[x][y].x = x_data;
             data[x][y].y = y_data;
