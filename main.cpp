@@ -1,4 +1,4 @@
-
+﻿
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -8,13 +8,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <algorithm>    
 #include <iostream>
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+
+//void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+//void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
@@ -41,35 +44,61 @@ typedef struct
     GLfloat x, y, z;
 } Data;
 
+typedef struct
+{
+    GLfloat r, g, b;
+} Data_color;
+
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
-
+"layout (location = 1) in vec3 aColor;\n"
 
 "uniform mat4 model;\n"
 "uniform mat4 view;\n"
 "uniform mat4 projection;\n"
 "uniform float scale_x;\n"
+"out vec3 color;\n"
 
 
 "void main()\n"
 "{\n"
-"   gl_Position =projection * view * model * vec4((aPos.x + 0.0f) /scale_x, (aPos.y + 0.0f) / scale_x, aPos.z, 1.0);\n"
+"   gl_Position =projection*view*model * vec4((aPos.x + 0.0f) /scale_x, (aPos.y + 0.0f) / scale_x, aPos.z, 1.0);\n"
+"   color = aColor;\n"
+
+   
 
 "}\0"; 
 
 
 const char* fragmentShaderSource = "#version 330 core\n"
+"in vec3 color;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"   FragColor = vec4((color.r+ 0.0f),(color.g+ 0.0f),(color.b+ 0.0f),1.0);\n"
 "}\n\0";
 
 
 
 
+Data_color rainbowColorMap(float f){
 
+   
+    
+    const  float dx = 0.8f;
+    f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
+    float g=(6-2*dx)*f+dx;//scale f to[dx,6−dx]
+    float R=max(0.0f,(3-fabs(g-4)-fabs(g-5))/2);
+    //int R = f/255.0;
+    float G=max(0.0f,(4-std::fabs(g-2)-std::fabs(g-4))/2);
+    float B=max(0.0f,(3-std::fabs(g-1)-std::fabs(g-2))/2);
+    Data_color color;
+    color.r = R;
+    color.g = G;
+    color.b = B;
+    return color;
+}
 
 
 int main()
@@ -93,8 +122,8 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+   // glfwSetCursorPosCallback(window, mouse_callback);
+    //glfwSetScrollCallback(window, scroll_callback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -137,48 +166,66 @@ int main()
     // ------------------------------------------------------------------
 #pragma region VertexBuffer
 
-    const int grid_x = 100;
-    const int grid_y = 100;
+    const int grid_x = 200;
+    const int grid_y = 200;
     
     Data data[grid_x][grid_y];
+    Data_color data_color[grid_x][grid_y];
    
 
     for (int x = 0; x < grid_x ; x += 1) {
         for (int y = 0; y < grid_y; y += 1) {
-            float x_data = (x - 50.0) / 10.0;
-            float y_data = (y - 50.0) / 10.0;
+            float x_data = (x - 100.0) / 5.0;
+            float y_data = (y - 100.0) / 5.0;
             float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
-                
+            Data_color color_x_y = rainbowColorMap(z_data);
             data[x][y].x = x_data;
             data[x][y].y = y_data;
             data[x][y].z = z_data;
             
+            data_color[x][y] = color_x_y;
+           
+
         }
     }
    
     
-    unsigned int VBO, VAO;
+    unsigned int VBO, VBO_colors, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-   
+    glGenBuffers(1, &VBO_colors);
+
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-  
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
+   
+     // 
+    //
 
-  
+     glBindBuffer(GL_ARRAY_BUFFER, 0);
+   
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+   
+    
+
     glBindVertexArray(0);
     
     
 #pragma endregion
 
+  
 
 
+    glPointSize(2.0f);
+   
 
 
 
@@ -208,15 +255,15 @@ int main()
         int scale_loc = glGetUniformLocation(shaderProgram, "scale_x");
         glUniform1f(scale_loc, uniform_scale_x);
      
-      
+       
         glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view =  glm::mat4(1.0f);
-        glm::mat4 projection  = glm::mat4(1.0f);
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
-        
+
         unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
         unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
@@ -225,9 +272,10 @@ int main()
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        
 
         glBindVertexArray(VAO); 
+
+       
         glDrawArrays(GL_POINTS, 0, 1000000);
       
 
@@ -237,12 +285,12 @@ int main()
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &VBO_colors);
 
     
     glfwTerminate();
     return 0;
 }
-
 
 
 
@@ -271,6 +319,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
+/*
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
@@ -313,4 +362,4 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     if (fov >= 45.0f)
         fov = 45.0f;
 }
- 
+ */
