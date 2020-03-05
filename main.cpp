@@ -8,6 +8,7 @@ void setNewDatas(int sample);
 float i;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 int processInput(GLFWwindow* window);
+Data_color twoHueColorMap(float f);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -238,6 +239,31 @@ Data_color rainbowColorMap(float f){
     return color;
 }
 
+Data_color twoHueColorMap(float f) {
+    float percentage_z = f / 0.5;
+
+    //std::cout << "Pourcentage en z : " << percentage_z << std::endl;
+
+    float R;
+    float B;
+
+    if (percentage_z < 0.5) {
+        R = percentage_z;
+        B = 1 - percentage_z;
+
+    } else {
+        R = 1 - percentage_z;
+        B = percentage_z;
+ 
+    }
+
+    Data_color color;
+    color.r = R;
+    color.g = B;
+    color.b = 0.;
+    return color;
+}
+
 float function_calc(float x, float y){
     return 2* exp(-(pow(x,2)+pow(y,2)))+ exp(-(pow(x-3,2)+pow(y-3,2)));
 }
@@ -252,9 +278,10 @@ void setNewDatas(int sample) {
         for (int y = 0; y < sample; y += 1) {
             float x_data = (x - 0.5 * (float)sample) / (0.1 * (float)sample);
             float y_data = (y - 0.5 * (float)sample) / (0.1 * (float)sample);
-            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3))));
+            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data)) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3)));
 
-            Data_color color_x_y = rainbowColorMap(z_data);
+            //Data_color color_x_y = rainbowColorMap(z_data);
+            Data_color color_x_y = twoHueColorMap(z_data);
 
             //std::cout << "x_data : " << z_data << " | x_data_bis : " << z_data_bis << std::endl;
             data[x][y].x = x_data;
