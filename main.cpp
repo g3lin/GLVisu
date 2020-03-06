@@ -46,6 +46,7 @@ const float scale_x = 5.;
 
 bool add_is_press = false;
 bool subtract_is_press = false;
+bool c_is_press = false;
 
 typedef struct
 {
@@ -222,6 +223,7 @@ Data_color getColorMap(float f){
         return heatColorMap(f);
     if(currentColor == 4)
         return divergingColorMap(f);
+    
 }
 
 
@@ -312,32 +314,32 @@ int main(){
    
     
     unsigned int VBO, VBO_colors, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &VBO_colors);
+    // glGenVertexArrays(1, &VAO);
+    // glGenBuffers(1, &VBO);
+    // glGenBuffers(1, &VBO_colors);
 
-    glBindVertexArray(VAO);
+    // glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
    
      // 
     //
 
-     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //  glBindBuffer(GL_ARRAY_BUFFER, 0);
    
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+    // glEnableVertexAttribArray(0);
+    // glEnableVertexAttribArray(1);
 
    
     
 
-    glBindVertexArray(0);
+    // glBindVertexArray(0);
     
     
 #pragma endregion
@@ -355,10 +357,10 @@ int main(){
     glUseProgram(shaderProgram);
     glUniform1f(id_scale_x, scale_x);
 
-    // Nombre d'echantillons
+    // // Nombre d'echantillons
     int sample = 100;
 
-    // Ajuster le nombre d'echantillons
+    // // Ajuster le nombre d'echantillons
     int input_ch;
     int step_sample = 10;
 
@@ -372,9 +374,7 @@ int main(){
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        // input
-        // -----
-        processInput(window);
+
         // Input
         input_ch = processInput(window);
 
@@ -445,8 +445,20 @@ int processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE && c_is_press) {
+        std::cout << "Ca release c" << std::endl;
+        c_is_press = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && !c_is_press) {
+        // Cas du '+'
+        std::cout << "C'est c color="<<currentColor  << std::endl;
+
+        c_is_press = true;
         currentColor = (currentColor+1)%5;
+    }
+        
     float cameraSpeed = 2.5 * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront; 
