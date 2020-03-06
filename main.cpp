@@ -10,8 +10,12 @@
 #include <iostream>
 using namespace std;
 
+void setNewDatas(int sample);
+
+float i;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+int processInput(GLFWwindow* window);
+// Data_color twoHueColorMap(float f);
 
 
 //void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -36,8 +40,12 @@ float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 float fov = 45.0f;
 
-int currentColor = 4;
+int currentColor = 3;
 
+const float scale_x = 5.;
+
+bool add_is_press = false;
+bool subtract_is_press = false;
 
 typedef struct
 {
@@ -48,6 +56,7 @@ typedef struct
 {
     GLfloat r, g, b;
 } Data_color;
+unsigned int VBO,VBO_colors, VAO;
 
 
 const char* vertexShaderSource = "#version 330 core\n"
@@ -74,6 +83,7 @@ const char* vertexShaderSource = "#version 330 core\n"
 const char* fragmentShaderSource = "#version 330 core\n"
 "in vec3 color;\n"
 "out vec4 FragColor;\n"
+
 "void main()\n"
 "{\n"
 "   FragColor = vec4((color.r+ 0.0f),(color.g+ 0.0f),(color.b+ 0.0f),1.0);\n"
@@ -82,10 +92,7 @@ const char* fragmentShaderSource = "#version 330 core\n"
 
 
 
-Data_color rainbowColorMap(float f){
-
-   
-    
+Data_color rainbowColorMap(float f){  
     const  float dx = 0.8f;
     f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
     float g=(6-2*dx)*f+dx;//scale f to[dx,6−dx]
@@ -101,9 +108,6 @@ Data_color rainbowColorMap(float f){
 }
 
 Data_color grayscaleColorMap(float f){
-
-   
-    
     const  float dx = 0.8f;
     f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
     // float g=(6-2*dx)*f+dx;//scale f to[dx,6−dx]
@@ -179,13 +183,41 @@ Data_color divergingColorMap(float f){
 }
 
 
+
+Data_color twoHueColorMap(float f) {
+    float percentage_z = f / 0.5;
+
+    //std::cout << "Pourcentage en z : " << percentage_z << std::endl;
+
+    float R;
+    float B;
+
+    if (percentage_z < 0.5) {
+        R = percentage_z;
+        B = 1 - percentage_z;
+
+    } else {
+        R = 1 - percentage_z;
+        B = percentage_z;
+ 
+    }
+
+    Data_color color;
+    color.r = R;
+    color.g = B;
+    color.b = 0.;
+    return color;
+}
+
+
+
 Data_color getColorMap(float f){
     if(currentColor == 0)
         return rainbowColorMap(f);
     if(currentColor == 1)
         return grayscaleColorMap(f);
     if(currentColor == 2)
-        return rainbowColorMap(f);
+        return twoHueColorMap(f);
     if(currentColor == 3)
         return heatColorMap(f);
     if(currentColor == 4)
@@ -193,8 +225,7 @@ Data_color getColorMap(float f){
 }
 
 
-int main()
-{
+int main(){
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -236,12 +267,10 @@ int main()
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-
     // fragment shader
     int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
-
 
     // link shaders
     int shaderProgram = glCreateProgram();
@@ -319,8 +348,19 @@ int main()
     glPointSize(2.0f);
    
 
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 
+    int id_scale_x = glGetUniformLocation(shaderProgram, "scale_x");
+    glUseProgram(shaderProgram);
+    glUniform1f(id_scale_x, scale_x);
 
+    // Nombre d'echantillons
+    int sample = 100;
+
+    // Ajuster le nombre d'echantillons
+    int input_ch;
+    int step_sample = 10;
 
 
   
@@ -335,6 +375,20 @@ int main()
         // input
         // -----
         processInput(window);
+        // Input
+        input_ch = processInput(window);
+
+        if (input_ch == 1) {
+            sample += step_sample;
+        }
+        if (input_ch == 2) {
+            sample -= step_sample;
+        }
+
+        std::cout << "Nombre d'echantillons : " << sample << std::endl;
+
+        // Actualiser les donnees
+        setNewDatas(sample);
 
         // render
         // ------
@@ -387,7 +441,7 @@ int main()
 
 
 
-void processInput(GLFWwindow* window)
+int processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -402,57 +456,90 @@ void processInput(GLFWwindow* window)
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+    // 'Debloquer' les touches '+' et '-'
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE && add_is_press) {
+        std::cout << "Ca release add" << std::endl;
+        add_is_press = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_RELEASE && subtract_is_press) {
+        std::cout << "Ca release subtract" << std::endl;
+        subtract_is_press = false;
+    }
+
+    // 'Bloquer' les touches '+' et '-' & Envoie du signal
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS && !add_is_press) {
+        // Cas du '+'
+        std::cout << "C'est plus" << std::endl;
+        add_is_press = true;
+        return 1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS && !subtract_is_press) {
+        // Cas du '-'
+        std::cout << "C'est moins" << std::endl;
+        subtract_is_press = true;
+        return 2;
+    }
+
+    return 0;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
   
-    glViewport(0, 0, width, height);    
+    glViewport(0, 0, width, height); 
+}   
 
-}
 
 
-/*
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
+
+void setNewDatas(int sample) {
+
+    int num_points = sample * sample;
+    Data data[sample][sample];
+    Data_color data_color[sample][sample];
+
+    for (int x = 0; x < sample ; x += 1) {
+        for (int y = 0; y < sample; y += 1) {
+            float x_data = (x - 0.5 * (float)sample) / (0.1 * (float)sample);
+            float y_data = (y - 0.5 * (float)sample) / (0.1 * (float)sample);
+            float z_data = 2 * exp(-(x_data * x_data + y_data * y_data)) + exp(-((x_data - 3) * (x_data - 3) + (y_data - 3) * (y_data - 3)));
+
+            //Data_color color_x_y = rainbowColorMap(z_data);
+            Data_color color_x_y = getColorMap(z_data);
+
+            //std::cout << "x_data : " << z_data << " | x_data_bis : " << z_data_bis << std::endl;
+            data[x][y].x = x_data;
+            data[x][y].y = y_data;
+            data[x][y].z = 0.0f;
+
+            data_color[x][y] = color_x_y;  
+
+        }
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &VBO_colors);
 
-    float sensitivity = 0.05;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    glBindVertexArray(VAO);
 
-    yaw += xoffset;
-    pitch += yoffset;
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
 
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+   
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);  
+
+    glBindVertexArray(0);
+
 }
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    if (fov >= 1.0f && fov <= 45.0f)
-        fov -= yoffset;
-    if (fov <= 1.0f)
-        fov = 1.0f;
-    if (fov >= 45.0f)
-        fov = 45.0f;
-}
- */
+ 
