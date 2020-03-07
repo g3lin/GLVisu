@@ -15,6 +15,7 @@ using namespace std;
 
 
 float i;
+bool threeD = true;
 //prototypes
 void setNewDatas(int sample);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -47,6 +48,7 @@ const float scale_x = 5.;
 bool add_is_press = false;
 bool subtract_is_press = false;
 bool c_is_press = false;
+bool e_is_press = false;
 
 //structure pour contenir les données de la fonction
 typedef struct
@@ -379,9 +381,12 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        projection = glm::perspective(glm::radians(fov), 1200.0f / 720.0f, 0.1f, 100.0f);
+
+        if (threeD){
+            model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+            projection = glm::perspective(glm::radians(fov), 1200.0f / 720.0f, 0.1f, 100.0f);
+        }
 
         //on passe les matrices aux shaders
         unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
@@ -429,7 +434,22 @@ int processInput(GLFWwindow* window)
 
         c_is_press = true;
         currentColor = (currentColor + 1) % 5;
+
     }
+
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE && e_is_press) {
+        std::cout << "Ca release e" << std::endl;
+        e_is_press = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !e_is_press) {
+        // Cas du '+'
+
+        e_is_press = true;
+        threeD = !threeD;
+
+    }
+
 
     float cameraSpeed = 2.5 * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
