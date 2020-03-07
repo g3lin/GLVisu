@@ -110,12 +110,7 @@ Data_color rainbowColorMap(float f){
 
 Data_color grayscaleColorMap(float f){
     const  float dx = 0.8f;
-    f=(f<0)? 0  :  ( f>1)? 1  :  f ;//clamp f in[0,1]
-    // float g=(6-2*dx)*f+dx;//scale f to[dx,6−dx]
-    // float R=max(0.0f,(3-fabs(g-4)-fabs(g-5))/2);
-    // //int R = f/255.0;
-    // float G=max(0.0f,(4-std::fabs(g-2)-std::fabs(g-4))/2);
-    // float B=max(0.0f,(3-std::fabs(g-1)-std::fabs(g-2))/2);
+    f=(f<0)? 0  :  ( f>1)? 1  :  f ;
     Data_color color;
     color.r = f*255;
     color.g = f*255;
@@ -187,9 +182,6 @@ Data_color divergingColorMap(float f){
 
 Data_color twoHueColorMap(float f) {
     float percentage_z = f / 0.5;
-
-    //std::cout << "Pourcentage en z : " << percentage_z << std::endl;
-
     float R;
     float B;
 
@@ -228,16 +220,12 @@ Data_color getColorMap(float f){
 
 
 int main(){
-    // glfw: initialize and configure
-    // ------------------------------
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
-    // glfw window creation
-    // --------------------
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TP2 IMN430 USherbrooke", NULL, NULL);
     if (window == NULL)
     {
@@ -247,11 +235,8 @@ int main(){
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    //glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -262,8 +247,7 @@ int main(){
 
 
 
-    // build and compile our shader program
-    // ------------------------------------
+
     // vertex shader
     int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -279,14 +263,11 @@ int main(){
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-
-   
-
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
 #pragma endregion
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
+
 #pragma region VertexBuffer
 
     const int grid_x = 200;
@@ -313,26 +294,7 @@ int main(){
     }
    
     
-    // unsigned int VBO, VBO_colors, VAO;
-    // glGenVertexArrays(1, &VAO);
-    // glGenBuffers(1, &VBO);
-    // glGenBuffers(1, &VBO_colors);
-
-    // glBindVertexArray(VAO);
-
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
-
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO_colors);
-    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(data_color), data_color, GL_STATIC_DRAW);
-   
-     
-    
-
-     glBindBuffer(GL_ARRAY_BUFFER, 0);
-   
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -348,8 +310,6 @@ int main(){
 
 
     glPointSize(2.0f);
-   
-
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
