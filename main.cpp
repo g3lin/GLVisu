@@ -40,7 +40,7 @@ float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 float fov = 45.0f;
 
-int currentColor = 3;
+int currentColor = 0;
 
 const float scale_x = 5.;
 
@@ -525,7 +525,7 @@ void setNewDatas(int sample) {
             //std::cout << "x_data : " << z_data << " | x_data_bis : " << z_data_bis << std::endl;
             data[x][y].x = x_data;
             data[x][y].y = y_data;
-            data[x][y].z = 0.0f;
+            data[x][y].z = z_data;
 
             data_color[x][y] = color_x_y;  
 
